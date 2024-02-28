@@ -8,7 +8,7 @@ trap "exit 1" TERM
 TOP_PID=$$
 
 KUBECTL_ARGS=""
-WAIT_TIME="${WAIT_TIME:-2}" # seconds
+WAIT_TIME="${WAIT_TIME:-10}" # seconds
 DEBUG="${DEBUG:-0}"
 TREAT_ERRORS_AS_READY="${TREAT_ERRORS_AS_READY:-0}"
 
@@ -165,13 +165,13 @@ get_job_state() {
 
     if [ $? -ne 0 ]; then
         echo "$get_job_state_output" >&2
-        kill -s TERM $TOP_PID
+        return
     elif [ $DEBUG -ge 2 ]; then
         echo "$get_job_state_output" >&2
     fi
     if [ -z "$get_job_state_output" ] || echo "$get_job_state_output" | grep -q "No resources found"; then
         echo "wait_for.sh: No jobs found!" >&2
-        kill -s TERM $TOP_PID
+        return
     fi
 
     # Extract number of <avtive>:<ready>:<succeeded>:<failed>
@@ -180,7 +180,7 @@ get_job_state() {
     if [ $? -ne 0 ]; then
         echo "$get_job_state_output" >&2
         echo "$get_job_state_output1" >&2
-        kill -s TERM $TOP_PID
+        return
     elif [ $DEBUG -ge 2 ]; then
         echo "${get_job_state_output1}" >&2
     fi
