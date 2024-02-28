@@ -169,7 +169,7 @@ get_job_state() {
     elif [ $DEBUG -ge 2 ]; then
         echo "$get_job_state_output" >&2
     fi
-    if [ "$get_job_state_output" == "" ] || echo "$get_job_state_output" | grep -q "No resources found"; then
+    if [ -z "$get_job_state_output" ] || echo "$get_job_state_output" | grep -q "No resources found"; then
         echo "wait_for.sh: No jobs found!" >&2
         kill -s TERM $TOP_PID
     fi
@@ -220,7 +220,7 @@ wait_for_resource() {
     wait_for_resource_type=$1
     wait_for_resource_descriptor="$2"
 
-    if [[ -n $MY_POD_NAMESPACE && $(helm status $MY_POD_NAMESPACE -o json | jq -r '.info.status') == "deployed" ]]; then
+    if [ -n "$MY_POD_NAMESPACE" ] && [ "$(helm status $MY_POD_NAMESPACE -o json | jq -r '.info.status')" = "deployed" ]; then
       echo "resource is deployed"
       return
     fi
