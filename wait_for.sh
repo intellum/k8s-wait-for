@@ -170,12 +170,14 @@ get_job_state() {
         else
           echo "$get_job_state_output" >&2
         fi
+        echo true
         return
     elif [ $DEBUG -ge 2 ]; then
         echo "$get_job_state_output" >&2
     fi
     if [ -z "$get_job_state_output" ] || echo "$get_job_state_output" | grep -q "No resources found"; then
         echo "wait_for.sh: No jobs found!" >&2
+        echo true
         return
     fi
 
@@ -185,6 +187,7 @@ get_job_state() {
     if [ $? -ne 0 ]; then
         echo "$get_job_state_output" >&2
         echo "$get_job_state_output1" >&2
+        echo true
         return
     elif [ $DEBUG -ge 2 ]; then
         echo "${get_job_state_output1}" >&2
