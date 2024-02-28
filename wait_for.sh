@@ -164,7 +164,12 @@ get_job_state() {
     get_job_state_output=$(kubectl describe jobs "$get_job_state_name" $KUBECTL_ARGS 2>&1)
 
     if [ $? -ne 0 ]; then
-        echo "$get_job_state_output" >&2
+        if echo "$get_job_state_output" | grep -q "NotFound"; then
+          timestamp=$(date +'%Y-%m-%d %H:%M:%S')
+          echo "[$timestamp] job $get_job_state_name not found..." >&2
+        else
+          echo "$get_job_state_output" >&2
+        fi
         return
     elif [ $DEBUG -ge 2 ]; then
         echo "$get_job_state_output" >&2
