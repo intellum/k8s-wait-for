@@ -8,7 +8,7 @@ trap "exit 1" TERM
 TOP_PID=$$
 
 KUBECTL_ARGS=""
-WAIT_TIME="${WAIT_TIME:-2}" # seconds
+WAIT_TIME="${WAIT_TIME:-10}" # seconds
 DEBUG="${DEBUG:-0}"
 TREAT_ERRORS_AS_READY="${TREAT_ERRORS_AS_READY:-0}"
 
@@ -164,14 +164,21 @@ get_job_state() {
     get_job_state_output=$(kubectl describe jobs "$get_job_state_name" $KUBECTL_ARGS 2>&1)
 
     if [ $? -ne 0 ]; then
-        echo "$get_job_state_output" >&2
-        kill -s TERM $TOP_PID
+        if echo "$get_job_state_output" | grep -q "NotFound"; then
+          timestamp=$(date +'%Y-%m-%d %H:%M:%S')
+          echo "[$timestamp] job $get_job_state_name not found..." >&2
+        else
+          echo "$get_job_state_output" >&2
+        fi
+        echo true
+        return
     elif [ $DEBUG -ge 2 ]; then
         echo "$get_job_state_output" >&2
     fi
     if [ -z "$get_job_state_output" ] || echo "$get_job_state_output" | grep -q "No resources found"; then
         echo "wait_for.sh: No jobs found!" >&2
-        kill -s TERM $TOP_PID
+        echo true
+        return
     fi
 
     # Extract number of <avtive>:<ready>:<succeeded>:<failed>
@@ -180,7 +187,8 @@ get_job_state() {
     if [ $? -ne 0 ]; then
         echo "$get_job_state_output" >&2
         echo "$get_job_state_output1" >&2
-        kill -s TERM $TOP_PID
+        echo true
+        return
     elif [ $DEBUG -ge 2 ]; then
         echo "${get_job_state_output1}" >&2
     fi
